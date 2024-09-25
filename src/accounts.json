@@ -1,0 +1,8 @@
+{
+  "accounts": {
+    "0x1234567890abcdef1234567890abcdef12345678": 1000,
+    "0xabcdefabcdefabcdefabcdefabcdefabcdef": 500
+  },
+  "0x1234567890abcdef1234567890abcdef12345678": 15859110,
+  "0xabcdefabcdefabcdefabcdefabcdefabcdef": 290
+}
