@@ -1,14 +1,25 @@
-import express from 'express';
+import express, { Request, Response }  from 'express';
 import { Block } from './blockchaintest';
 import { Blockchain } from './blockchaintest';  // 根据你实际的区块链文件路径修改
 import os from 'os';  // 引入 os 模块
+import bodyParser from 'body-parser';
+import cors from 'cors';
 
 // 实例化 Blockchain 类
 const blockchain = new Blockchain(); // 生成新的 Blockchain 实例
 blockchain.startMining();  // 调用实例的方法进行挖矿
 
 const app = express();
-app.use(express.json());  // 使用 JSON 中间件解析请求体
+const port = 3001;
+
+app.use(bodyParser.json());
+app.use(cors());
+
+interface Balance {
+  [address: string]: number;
+}
+
+
 
 // 获取最新区块，矿工将基于此区块进行挖矿
 app.get('/latest-block', (req, res) => {
@@ -17,8 +28,8 @@ app.get('/latest-block', (req, res) => {
 });
 
 
-//试验区开始
-// 矿工提交挖好的区块
+
+//  1- 矿工提交挖好的区块
 app.post('/submit-block', (req, res) => {
   const newBlockData = req.body.block;
   console.log('⛏️ 收到新的区块:', newBlockData);
@@ -44,7 +55,6 @@ app.post('/submit-block', (req, res) => {
     return res.status(402).json({ message: 'Invalid previousHash' });
   }
 
-
     // 重新实例化为 Block 类对象
   const newBlock = new Block(
     newBlockData.index,
@@ -63,8 +73,6 @@ app.post('/submit-block', (req, res) => {
   }
 
 
-
-
   return res.status(200).json({ message: 'Block accepted' });
 
     // 验证通过，添加区块到区块链中
@@ -80,9 +88,45 @@ app.post('/submit-block', (req, res) => {
 });
 
 
+// 1- 矿工提交挖好的区块 结束
 
 
-// 矿工提交挖好的区块 结束
+// 2-发送交易接口
+app.post('/transaction', (req: Request, res: Response) => {
+  const { from, to, amount } = req.body;
+  
+  // 将amount 转为数值
+  const numericAmount = Number(amount);
+
+  // 验证金额是否有效
+  // const isValidAddress = (address: string) => /^(0x)?[0-9a-fA-F]{40}$/.test(address);
+
+  // if (!isValidAddress(from) || !isValidAddress(to)) {
+  //   return res.status(400).json({ error: "无效的地址" });
+  // }
+
+
+  // 防止自发交易
+  if (from === to) {
+    return res.status(400).json({ error: "无法向自己发送交易" });
+  }
+
+  // 使用区块链的 getBalance 方法来检查余额
+  const fromBalance = blockchain.getBalance(from);
+  if (fromBalance < numericAmount) {
+    return res.status(400).json({ error: "余额不足" });
+  }
+
+  // 创建交易并推送到区块链的 pendingTransactions 列表中
+  blockchain.createTransaction(from, to, numericAmount);
+
+  // 打印当前的 pendingTransactions 以检查是否成功添加
+  console.log(blockchain.pendingTransactions);
+
+  res.json({ message: "交易已创建，等待确认" });
+});
+
+// 2-发送交易接口 结束
 
 
 

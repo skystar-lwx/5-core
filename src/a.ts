@@ -29,7 +29,7 @@ app.get('/balance/:address', (req: Request, res: Response) => {
 
 
 
-// 发送交易接口
+
 // 发送交易接口
 app.post('/transaction', (req: Request, res: Response) => {
   const { from, to, amount } = req.body;
@@ -43,7 +43,6 @@ app.post('/transaction', (req: Request, res: Response) => {
   // if (!isValidAddress(from) || !isValidAddress(to)) {
   //   return res.status(400).json({ error: "无效的地址" });
   // }
-
 
 
   // 防止自发交易
