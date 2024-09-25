@@ -1,6 +1,7 @@
 import express from 'express';
 import { Block } from './blockchaintest';
 import { Blockchain } from './blockchaintest';  // 根据你实际的区块链文件路径修改
+import os from 'os';  // 引入 os 模块
 
 // 实例化 Blockchain 类
 const blockchain = new Blockchain(); // 生成新的 Blockchain 实例
@@ -89,5 +90,12 @@ app.post('/submit-block', (req, res) => {
 
 // 启动主节点服务器，监听3001端口
 app.listen(3001, () => {
+  const networkInterfaces = os.networkInterfaces();
+  const ipAddresses = Object.values(networkInterfaces)
+    .flat()
+    .filter(iface => iface && iface.family === 'IPv4' && !iface.internal)
+    .map(iface => iface?.address)  // 使用可选链操作符
+
   console.log('Blockchain node running on port 3001');
+  console.log('本机IP地址:', ipAddresses.filter(Boolean).join(', '));  // 过滤掉 undefined
 });
