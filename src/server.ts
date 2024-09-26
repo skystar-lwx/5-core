@@ -60,7 +60,9 @@ app.post('/submit-block', (req, res) => {
     newBlockData.index,
     newBlockData.timestamp,
     newBlockData.transactions,
-    newBlockData.previousHash
+    newBlockData.previousHash,
+    newBlockData.minerAddress  // 确保传入矿工地址
+
   );
   newBlock.nonce = newBlockData.nonce;
   newBlock.hash = newBlockData.hash;

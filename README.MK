@@ -83,3 +83,13 @@ curl -X GET http://localhost:3001/transaction/0x5dcjqucob9o
   "0x1234567890abcdef1234567890abcdef12345678": 16110,
   "0xabcdefabcdefabcdefabcdefabcdefabcdef": 290
 }
+
+
+curl -X POST http://192.168.100.100:3001/transaction \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": "0x1234567890abcdef1234567890abcdef12345678",
+    "to": "0xabcdefabcdefabcdefabcdefabcdefabcdef",
+    "amount": "10",
+    "privateKey": "yourPrivateKey"
+  }'

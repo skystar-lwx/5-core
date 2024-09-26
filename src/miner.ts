@@ -1,11 +1,16 @@
 import axios, { AxiosError } from 'axios';  // 导入 AxiosError
-import { Block } from './blockchaintest';  // 假设你已经有 Block 类
+import { Block } from './blockchaintest';  
+import { updateBalance } from './balanceManager';
+import { Transaction } from './balanceManager';// 假设你已经有 Block 类
+
+
+const serverurl = "http://localhost:3001"
 
 class Miner {
   minerAddress: string;
   difficulty: number;
   mining: boolean;
-  newBlock: Block | null = null;  // 存储新挖出的区块
+  newBlock: Block | null = null;                  // 存储新挖出的区块
   lastSubmittedBlockHash: string | null = null;  // 记录上次提交成功的区块哈希
 
   constructor(minerAddress: string, difficulty: number) {
@@ -39,10 +44,10 @@ class Miner {
 
       // 检查当前区块是否已经提交过
       if (newBlock.hash === this.lastSubmittedBlockHash) {
-        console.log(`⚠️ 区块 ${newBlock.hash} 已提交，跳过重复提交。`);
+        console.log(`⚠️ 该区块 ${newBlock.hash} 已提交，跳过重复提交。`);
         return;
       } else {
-        console.log(`🔎 @@@@@@@@@@@@区块 ${newBlock.hash} 正在提交...`);
+        console.log(`🔎 区块 ${newBlock.hash} 正在提交...`);
       }
 
       const response = await axios.post('http://localhost:3001/submit-block', { block: newBlock });
@@ -59,13 +64,15 @@ class Miner {
         this.newBlock = new Block(
           latestBlock.index + 1,
           new Date().toISOString(),
-          [], // 可根据需要添加交易数据
-          latestBlock.hash
+          [],                   // 可根据需要添加交易数据
+          latestBlock.hash,
+          this.minerAddress
+
         );
       } else {
         console.error(`❌ 提交区块失败，状态码: ${response.status}，错误信息:`, response.data);
         console.log('⏸️  暂停 3 秒后重新提交区块...');
-        await this.pause(3000);  // 暂停 3 秒
+        await this.pause(3000);             // 暂停 3 秒
         await this.submitBlock(newBlock);  // 重新提交区块
       }
 
@@ -94,10 +101,7 @@ class Miner {
     }
   }
 
-  // 辅助函数：暂停一定时间
-  pause(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+ 
 
   // 挖矿逻辑
   async startMining() {
@@ -110,12 +114,13 @@ class Miner {
         console.log(`📏 Current chain height: ${latestBlock.index}`);
         console.log('⛏️ 基于最新区块挖矿，previousHash:', latestBlock.hash);
 
-        // 创建新区块
+        // 创建新区块 ,区块结构，注意这样结构一定要和主网一直，不然无法提交验证
         this.newBlock = new Block(
           latestBlock.index + 1,
           new Date().toISOString(),
-          [], // 可根据需要添加交易数据
-          latestBlock.hash
+          [],                         // 可根据需要添加交易数据
+          latestBlock.hash,
+          this.minerAddress           // 传入矿工地址
         );
 
         // 开始挖矿
@@ -145,6 +150,12 @@ class Miner {
   // 停止挖矿
   stopMining() {
     this.mining = false;
+  }
+
+
+   // 辅助函数：暂停一定时间
+   pause(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 
