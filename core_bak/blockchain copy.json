@@ -1,0 +1,28 @@
+[
+  {
+    "index": 0,
+    "timestamp": "2024-09-26T09:04:11.120Z",
+    "transactions": [],
+    "previousHash": "0",
+    "nonce": 0,
+    "hash": "0xc720f08b6e4f654f9f833aca9874006bff7808bdef466524fd78c50b3ebb9393",
+    "minerAddress": "genesis"
+  },
+  {
+    "index": 1,
+    "timestamp": "2024-09-26T09:04:11.122Z",
+    "transactions": [
+      {
+        "from": "coinbase",
+        "to": "miner1",
+        "amount": 10,
+        "status": "pending",
+        "hash": "0x0e618e65d120a3c4a9646c94047b824110f30078c1c844f3bbf27ef106fd6202"
+      }
+    ],
+    "previousHash": "0xc720f08b6e4f654f9f833aca9874006bff7808bdef466524fd78c50b3ebb9393",
+    "nonce": 0,
+    "hash": "0x63bfe42c71b33c1be9589e56f73c38fa5099b1e59844c172f743568f1085cefa",
+    "minerAddress": "miner1"
+  }
+]
