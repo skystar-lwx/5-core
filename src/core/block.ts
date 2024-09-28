@@ -14,14 +14,23 @@ export class Block {
         this.hash = this.calculateHash();  // 初始化哈希值
     }
 
-    // 计算区块哈希
+    // 计算区块哈希 64位
     calculateHash(): string {
-        return keccak256(toUtf8Bytes(this.index + this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce));
+        return keccak256(toUtf8Bytes(
+            this.index + 
+            this.previousHash + 
+            this.timestamp + 
+            JSON.stringify(this.transactions) + 
+            this.nonce
+        )).substring(0, 5);;
     }
+
+
+
 
     // 挖矿函数，根据难度进行哈希运算
     mineBlock(difficulty: number): void {
-      
+
         const target = '0'.repeat(difficulty);  // 根据难度生成目标前缀
         let attempt = 0;
 

@@ -8,7 +8,7 @@ import { BalanceManager } from './balanceManager';
 export class Blockchain {
     chain: Block[] = [];                                             // 存储区块链的数组
     pendingTransactions: Transaction[] = [];                         // 存储待处理交易的数组
-    difficulty: number = 1;                                          // 挖矿难度
+    difficulty: number = 2;                                          // 挖矿难度
     chainFilePath: string = path.join(__dirname, 'chaindata/blockchain.json'); // 区块链文件存储路径
     transactionManager: TransactionManager;                  // 添加 TransactionManager 实例
     balanceManager: BalanceManager;                                  // 余额管理器

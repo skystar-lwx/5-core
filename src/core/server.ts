@@ -31,18 +31,24 @@ app.get('/latest-block', (req, res) => {
 // 矿工提交挖好的区块
 app.post('/submit-block', (req, res) => {
   const newBlockData = req.body.block;
+  console.log('⛏️ 收到新的区块:', newBlockData);
 
-  // 检查区块结构
-  if (!newBlockData || !newBlockData.index || !newBlockData.timestamp || !newBlockData.transactions || !newBlockData.previousHash || !newBlockData.nonce || !newBlockData.hash) {
-    return res.status(400).json({ message: 'Invalid block structure' });
-  }
 
   const latestBlock = blockchain.getLatestBlock();
+  console.log('🔍 挖出Hash:', newBlockData.previousHash);
+  console.log('🔍 主节Hsh:', latestBlock.hash);
 
-  // 验证 previousHash 是否匹配最新区块
-  if (newBlockData.previousHash !== latestBlock.hash) {
-    return res.status(400).json({ message: 'Invalid previousHash' });
+   // 检查区块结构是否完整
+   if (!newBlockData || typeof newBlockData.index === 'undefined' || !newBlockData.timestamp || !newBlockData.transactions || !newBlockData.previousHash || typeof newBlockData.nonce === 'undefined' || !newBlockData.hash) {
+    console.error('❌ 收到的区块结构无效:', newBlockData);
+    return res.status(401).json({ message: 'Invalid block structure' });
   }
+
+    // 验证 previousHash 是否匹配
+    if (newBlockData.previousHash !== latestBlock.hash) {
+      console.error('❌ previousHash 不匹配，拒绝区块:', newBlockData.hash);
+      return res.status(402).json({ message: 'Invalid previousHash' });
+    }
 
   // 重新实例化为 Block 类对象
   const newBlock = new Block(
@@ -56,18 +62,26 @@ app.post('/submit-block', (req, res) => {
   newBlock.hash = newBlockData.hash;
 
   // 验证区块是否满足难度要求
-  if (!blockchain.isValidBlock(newBlock)) {
-    return res.status(400).json({ message: 'Invalid block difficulty' });
+  const isBlockValid = blockchain.isValidBlock(newBlock);
+  if (!isBlockValid) {
+    console.error('❌ 区块难度验证失败:', newBlock.hash);
+    return res.status(403).json({ message: 'Invalid block difficulty' });
   }
+
+  return res.status(200).json({ message: 'Block accepted' });
 
   // 添加区块到区块链
   try {
     blockchain.addBlock(newBlock);
-    return res.status(200).json({ message: 'Block accepted', block: newBlock });
+    console.log('✅ 区块已被接受并添加到链中:', newBlock.hash);
+    return res.status(200).json({ message: 'Block accepted' });
   } catch (error) {
+    console.error('❌ 添加区块到链时出错:', error);
     return res.status(500).json({ message: 'Error adding block to blockchain' });
   }
 });
+
+// 1- 矿工提交挖好的区块 结束
 
 // 发送交易接口
 app.post('/transaction', (req: Request, res: Response) => {
@@ -125,6 +139,7 @@ app.post('/transaction', (req: Request, res: Response) => {
   console.log('*4444444444444444444444444444444444444&');
   return res.status(200).json({ message: 'Transaction created successfully' });
 });
+
 
 // 启动主节点服务器，监听3001端口
 app.listen(port, () => {
