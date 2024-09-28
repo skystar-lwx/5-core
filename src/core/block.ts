@@ -1,5 +1,5 @@
 import { keccak256, toUtf8Bytes } from 'ethers';  // 引入 keccak256 生成哈希
-
+import * as crypto from 'crypto';
 export class Block {
     public hash: string;
     public nonce: number = 0;
@@ -15,14 +15,23 @@ export class Block {
     }
 
     // 计算区块哈希 64位
+    // calculateHash(): string {
+    //     return keccak256(toUtf8Bytes(
+    //         this.index + 
+    //         this.previousHash + 
+    //         this.timestamp + 
+    //         JSON.stringify(this.transactions) + 
+    //         this.nonce
+    //     )).substring(0, 5);;
+    // }
+
+
+
     calculateHash(): string {
-        return keccak256(toUtf8Bytes(
-            this.index + 
-            this.previousHash + 
-            this.timestamp + 
-            JSON.stringify(this.transactions) + 
-            this.nonce
-        )).substring(0, 5);;
+        return crypto.createHash('md5')
+            .update(this.index + this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce)
+            .digest('hex')
+            .slice(0, 16);  // 截取前16位
     }
 
 
