@@ -19,13 +19,17 @@ export class Blockchain {
         this.loadBlockchainFromFile();                               // 在构造函数中加载区块链数据
         logWithTimestamp('区块链初始化完成，当前区块链长度:', this.chain.length); // 输出当前区块链长度
     }
-
     // 添加区块到区块链
     addBlock(newBlock: Block): void {
+        // 更新余额
         newBlock.mineBlock(this.difficulty);                         // 挖矿新块
         this.chain.push(newBlock);                                   // 将新块添加到链中
-        this.saveBlockchainToFile();                                 // 保存区块链到文件
-        logWithTimestamp(`区块 ${newBlock.index} 已添加，当前区块链长度: ${this.chain.length}`); // 输出添加的区块信息
+        this.saveBlockchainToFile();
+        for (const transaction of newBlock.transactions) {
+            // 保存区块链到文件
+            this.balanceManager.updateBalance(transaction);             // 更新余额
+            logWithTimestamp(`区块 ${newBlock.index} 已添加，当前区块链长度: ${this.chain.length}`); // 输出添加的区块信息
+        }
     }
 
     // 创建创世区块
@@ -76,7 +80,7 @@ export class Blockchain {
     createTransaction(from: string, to: string, amount: number): void {
         const transaction = this.transactionManager.createTransaction(from, to, amount);  // 使用 TransactionManager 来创建交易
         this.pendingTransactions.push(transaction);
-        logWithTimestamp('交易已添加到待处理交易列表:', transaction);
+        logWithTimestamp(`交易已添加到待处理交易列表: ${JSON.stringify(transaction, null, 2)}`);  // 使用 JSON.stringify() 格式化输出
     }
 
     // 获取指定地址的余额

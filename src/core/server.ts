@@ -1,17 +1,20 @@
 import express, { Request, Response } from 'express';
-import os from 'os';  
+import os from 'os';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { Blockchain } from './blockchain';  // 从你的模块化文件导入
 import { Block } from './block';  // 从你的模块化文件导入
 import { Transaction } from './transaction';  // 从你的模块化文件导入
+import { BalanceManager } from './balanceManager';
 
+import { logWithTimestamp } from './utils';
 // 实例化区块链
-const blockchain = new Blockchain();  
+const blockchain = new Blockchain();
+const balanceManager = new BalanceManager();  // 实例化余额管理器
 
 // 指定矿工地址
 const minerAddress = 'miner1';  // 你可以将其改为任何你想要的矿工地址
-blockchain.startMining(minerAddress);  // 启动挖矿任务
+ blockchain.startMining(minerAddress);  // 启动挖矿任务
 
 const app = express();
 const port = 3001;
@@ -81,14 +84,45 @@ app.post('/transaction', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Cannot send transaction to self' });
   }
 
-  // 检查账户余额
-  const fromBalance = blockchain.getBalance(from);
-  if (fromBalance < numericAmount) {
-    return res.status(400).json({ error: 'Insufficient balance' });
+  // 检查账户余额 开始
+
+  const fromBalance = balanceManager.getBalance(from); // 获取账户余额
+  const toBalance = balanceManager.getBalance(to); // 获取账户余额
+  console.log('****************************************************');
+
+  // 打印返回的余额信息和输入金额
+  console.log(
+    `fromBalance: ${fromBalance} \n, 
+    toBalance: ${toBalance}  \n ,
+    numericAmount: ${numericAmount} \n
+    `);
+  console.log('****************************************************');
+
+  // 检查账户是否存在或余额是否足够
+  // 检查账户是否存在或余额是否足够
+  if (fromBalance === -1) {
+    // 如果发送方账户不存在，返回 404 错误
+    logWithTimestamp(`error:发送方账户 ${from} 不存在` )
+    return res.status(404).json({ error: `发送方账户 ${from} 不存在` });
+   
+  } else if (toBalance === -1) {
+    // 如果接收方账户不存在，返回 404 错误
+    logWithTimestamp(`error:接收方账户 ${to} 不存在` )
+    return res.status(404).json({ error: `接收方账户 ${to} 不存在` });
+    
+  } else if (fromBalance < numericAmount) {
+    // 如果余额不足，返回 400 错误
+    return res.status(400).json({ error: '发送方账户余额不足' });
   }
+
+  // 检查账户余额结束
+
 
   // 创建交易并推送到待处理交易列表
   blockchain.createTransaction(from, to, numericAmount);
+  console.log('****************************************&');
+  console.log(`from: ${from}, to: ${to}, amount: ${numericAmount}`);
+  console.log('*4444444444444444444444444444444444444&');
   return res.status(200).json({ message: 'Transaction created successfully' });
 });
 
