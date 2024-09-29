@@ -3,6 +3,19 @@ import { Blockchain } from './2-blockchain';  // 假设区块链文件路径
 
 const sockets: WebSocket[] = [];
 
+// 定义消息类型
+enum MessageType {
+    QUERY_LATEST = "QUERY_LATEST",
+    QUERY_ALL = "QUERY_ALL",
+    RESPONSE_BLOCKCHAIN = "RESPONSE_BLOCKCHAIN"
+}
+
+// 定义消息接口
+interface Message {
+    type: MessageType;
+    data?: any;
+}
+
 // 初始化 P2P 服务器
 export const initP2PServer = (port: number, blockchain: Blockchain) => {
     const server = new WebSocket.Server({ port });
@@ -16,11 +29,43 @@ const initConnection = (ws: WebSocket, blockchain: Blockchain) => {
     ws.on('message', (message: string) => handleMessage(ws, message, blockchain));
     ws.on('close', () => closeConnection(ws));
     ws.on('error', () => closeConnection(ws));
+
+    // 每当有新的连接，查询最新的区块链
+    sendMessage(ws, { type: MessageType.QUERY_LATEST });
 };
 
 // 处理消息
 const handleMessage = (ws: WebSocket, message: string, blockchain: Blockchain) => {
-    const receivedBlocks = JSON.parse(message);
+    const receivedMessage: Message = JSON.parse(message);
+
+    switch (receivedMessage.type) {
+        case MessageType.QUERY_LATEST:
+            sendMessage(ws, {
+                type: MessageType.RESPONSE_BLOCKCHAIN,
+                data: [blockchain.getLatestBlock()]
+            });
+            break;
+        case MessageType.QUERY_ALL:
+            sendMessage(ws, {
+                type: MessageType.RESPONSE_BLOCKCHAIN,
+                data: blockchain.chain
+            });
+            break;
+        case MessageType.RESPONSE_BLOCKCHAIN:
+            handleBlockchainResponse(receivedMessage.data, blockchain);
+            break;
+        default:
+            console.error("无法处理的消息类型:", receivedMessage.type);
+    }
+};
+
+// 处理区块链消息响应
+const handleBlockchainResponse = (receivedBlocks: any[], blockchain: Blockchain) => {
+    if (receivedBlocks.length === 0) {
+        console.log('接收到的区块链为空');
+        return;
+    }
+
     const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
     const latestBlockHeld = blockchain.getLatestBlock();
 
@@ -43,21 +88,32 @@ const handleMessage = (ws: WebSocket, message: string, blockchain: Blockchain) =
     }
 };
 
+// 关闭连接
 const closeConnection = (ws: WebSocket) => {
     console.log('关闭 P2P 连接');
     sockets.splice(sockets.indexOf(ws), 1);
 };
 
-const queryAllMsg = () => JSON.stringify({ type: 'QUERY_ALL' });
-const responseLatestMsg = (blockchain: Blockchain) => JSON.stringify(blockchain.chain);
+// 构建查询所有区块的消息
+const queryAllMsg = () => JSON.stringify({ type: MessageType.QUERY_ALL });
 
-export const broadcast = (message: any) => sockets.forEach(ws => ws.send(message));
+// 构建响应最新区块的消息
+const responseLatestMsg = (blockchain: Blockchain) => JSON.stringify({
+    type: MessageType.RESPONSE_BLOCKCHAIN,
+    data: [blockchain.getLatestBlock()]
+});
 
-// 导出 connectToPeer 函数
+// 发送消息
+const sendMessage = (ws: WebSocket, message: Message) => ws.send(JSON.stringify(message));
+
+// 广播消息到所有节点
+export const broadcast = (message: Message) => sockets.forEach(ws => sendMessage(ws, message));
+
+// 连接到新的节点
 export const connectToPeer = (newPeer: string, blockchain: Blockchain) => {
-  const ws = new WebSocket(newPeer);
-  ws.on('open', () => initConnection(ws, blockchain));
-  ws.on('error', (error) => {
-      console.error('连接新节点时出错:', error);
-  });
+    const ws = new WebSocket(newPeer);
+    ws.on('open', () => initConnection(ws, blockchain));
+    ws.on('error', (error) => {
+        console.error('连接新节点时出错:', error);
+    });
 };

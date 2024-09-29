@@ -15,8 +15,8 @@ export class Miner {
     transactionManager: TransactionManager; // 交易管理器实例
     reward: number = 10;                    // 挖矿奖励
     isMining: boolean = false;              // 矿工是否正在挖矿
-    miningInterval: number = 10000;          // 挖矿间隔时间，默认5秒
-    newBlock: Block | null = null;                  // 存储新挖出的区块
+    miningInterval: number = 10000;         // 挖矿间隔时间，默认10秒
+    newBlock: Block | null = null;          // 存储新挖出的区块
     lastSubmittedBlockHash: string | null = null;  // 记录上次提交成功的区块哈希
     difficulty: number;
 
@@ -61,7 +61,9 @@ export class Miner {
             if (response.status === 200) {
                 console.log('✅ 区块已提交:', newBlock.hash);
                 this.lastSubmittedBlockHash = newBlock.hash;  // 更新哈希
-                broadcast({ type: 'NEW_BLOCK', data: newBlock });  // 广播区块到P2P网络
+
+                // 广播区块到P2P网络
+                broadcast(JSON.stringify({ type: 'NEW_BLOCK', data: newBlock }));  // 广播区块到P2P网络
             } else {
                 console.error(`❌ 提交区块失败，状态码: ${response.status}`);
                 await this.retrySubmit(newBlock);
@@ -147,5 +149,5 @@ miner.startMining();  // 开始持续挖矿
 initP2PServer(6001, blockchain);  // 启动P2P服务器
 
 // 连接到其他矿工节点
-connectToPeer('ws://192.168.100.102:6002');
-connectToPeer('ws://192.168.100.103:6003');
+connectToPeer('ws://192.168.100.102:6002', blockchain);
+connectToPeer('ws://192.168.100.103:6003', blockchain);
