@@ -43,7 +43,10 @@ app.post('/submit-block', (req, res) => {
   console.log('🔍 主节Hash:', latestBlock.hash);
 
   // 验证区块结构
-  if (!newBlockData || typeof newBlockData.index === 'undefined' || !newBlockData.timestamp || !newBlockData.transactions || !newBlockData.previousHash || typeof newBlockData.nonce === 'undefined' || !newBlockData.hash) {
+  if (!newBlockData || typeof newBlockData.index === 'undefined' || 
+      !newBlockData.timestamp || !Array.isArray(newBlockData.transactions) || 
+      !newBlockData.previousHash || typeof newBlockData.nonce === 'undefined' || 
+      !newBlockData.hash || typeof newBlockData.minerAddress === 'undefined') {
     console.error('❌ 收到的区块结构无效:', newBlockData);
     return res.status(401).json({ message: 'Invalid block structure' });
   }
@@ -79,6 +82,7 @@ app.post('/submit-block', (req, res) => {
     console.log('✅ 区块已被接受并添加到链中:', newBlock.hash);
 
     // 广播新块到P2P网络
+    console.log('⛏️ 广播新块到P2P网络:', newBlock.hash);
     broadcast({ type: 'NEW_BLOCK', data: newBlock });
 
     return res.status(200).json({ message: 'Block accepted' });
@@ -124,6 +128,7 @@ app.post('/transaction', (req: Request, res: Response) => {
   logWithTimestamp(`Transaction created from ${from} to ${to} amount: ${numericAmount}`);
 
   // 广播交易到P2P网络
+  console.log(`📤 广播交易 ${from} -> ${to}, 金额: ${numericAmount}`);
   broadcast({ type: 'NEW_TRANSACTION', data: { from, to, amount } });
 
   return res.status(200).json({ message: 'Transaction created successfully' });
@@ -138,5 +143,4 @@ app.listen(port, () => {
     .map(iface => iface?.address);
 
   console.log(`Blockchain node running on port ${port}`);
-  console.log('本机IP地址:', ipAddresses.filter(Boolean).join(', '));
-});
+  console.log('本机IP地址:', ipAddresses.filter(Boolean​⬤

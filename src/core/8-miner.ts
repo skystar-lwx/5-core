@@ -7,6 +7,14 @@ import { logWithTimestamp } from './utils';         // 引入日志输出函数
 import { BalanceManager } from './balanceManager';  // 引入余额管理模块
 import { initP2PServer, connectToPeer, broadcast } from './6-p2p';  // 引入 P2P 功能
 
+// 定义消息类型
+enum MessageType {
+    QUERY_LATEST = "QUERY_LATEST",
+    QUERY_ALL = "QUERY_ALL",
+    RESPONSE_BLOCKCHAIN = "RESPONSE_BLOCKCHAIN",
+    NEW_BLOCK = "NEW_BLOCK"
+}
+
 const serverurl = "http://192.168.100.102:3001";  // 设置为要连接的服务器地址
 
 export class Miner {
@@ -15,8 +23,8 @@ export class Miner {
     transactionManager: TransactionManager; // 交易管理器实例
     reward: number = 10;                    // 挖矿奖励
     isMining: boolean = false;              // 矿工是否正在挖矿
-    miningInterval: number = 10000;         // 挖矿间隔时间，默认10秒
-    newBlock: Block | null = null;          // 存储新挖出的区块
+    miningInterval: number = 10000;          // 挖矿间隔时间，默认5秒
+    newBlock: Block | null = null;                  // 存储新挖出的区块
     lastSubmittedBlockHash: string | null = null;  // 记录上次提交成功的区块哈希
     difficulty: number;
 
@@ -63,7 +71,7 @@ export class Miner {
                 this.lastSubmittedBlockHash = newBlock.hash;  // 更新哈希
 
                 // 广播区块到P2P网络
-                broadcast(JSON.stringify({ type: 'NEW_BLOCK', data: newBlock }));  // 广播区块到P2P网络
+                broadcast({ type: MessageType.NEW_BLOCK, data: newBlock });  // 广播区块到P2P网络
             } else {
                 console.error(`❌ 提交区块失败，状态码: ${response.status}`);
                 await this.retrySubmit(newBlock);
@@ -75,7 +83,15 @@ export class Miner {
 
     // 验证区块结构
     isValidBlock(block: Block): boolean {
-        return typeof block.index !== 'undefined' && block.timestamp && Array.isArray(block.transactions) && block.previousHash && block.nonce >= 0 && block.hash;
+        // 确保返回 boolean 类型，而不是 string | boolean
+        return (
+            typeof block.index !== 'undefined' &&
+            !!block.timestamp && 
+            Array.isArray(block.transactions) && 
+            !!block.previousHash && 
+            block.nonce >= 0 && 
+            !!block.hash
+        );
     }
 
     // 重新尝试提交区块

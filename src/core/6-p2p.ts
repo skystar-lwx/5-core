@@ -7,7 +7,8 @@ const sockets: WebSocket[] = [];
 enum MessageType {
     QUERY_LATEST = "QUERY_LATEST",
     QUERY_ALL = "QUERY_ALL",
-    RESPONSE_BLOCKCHAIN = "RESPONSE_BLOCKCHAIN"
+    RESPONSE_BLOCKCHAIN = "RESPONSE_BLOCKCHAIN",
+    NEW_BLOCK = "NEW_BLOCK"
 }
 
 // 定义消息接口
@@ -95,10 +96,12 @@ const closeConnection = (ws: WebSocket) => {
 };
 
 // 构建查询所有区块的消息
-const queryAllMsg = () => JSON.stringify({ type: MessageType.QUERY_ALL });
+const queryAllMsg = (): Message => ({
+    type: MessageType.QUERY_ALL
+});
 
 // 构建响应最新区块的消息
-const responseLatestMsg = (blockchain: Blockchain) => JSON.stringify({
+const responseLatestMsg = (blockchain: Blockchain): Message => ({
     type: MessageType.RESPONSE_BLOCKCHAIN,
     data: [blockchain.getLatestBlock()]
 });
