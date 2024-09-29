@@ -8,11 +8,13 @@ import { BalanceManager } from './balanceManager';  // 引入余额管理模块
 import { initP2PServer, connectToPeer, broadcast } from './6-p2p';  // 引入 P2P 功能
 
 // 定义消息类型
+// 定义消息类型
 enum MessageType {
     QUERY_LATEST = "QUERY_LATEST",
     QUERY_ALL = "QUERY_ALL",
     RESPONSE_BLOCKCHAIN = "RESPONSE_BLOCKCHAIN",
-    NEW_BLOCK = "NEW_BLOCK"
+    NEW_BLOCK = "NEW_BLOCK",  // 添加 NEW_BLOCK
+    NEW_TRANSACTION = "NEW_TRANSACTION"  // 添加 NEW_TRANSACTION
 }
 
 const serverurl = "http://192.168.100.102:3001";  // 设置为要连接的服务器地址
@@ -166,4 +168,4 @@ initP2PServer(6001, blockchain);  // 启动P2P服务器
 
 // 连接到其他矿工节点
 connectToPeer('ws://192.168.100.102:6002', blockchain);
-connectToPeer('ws://192.168.100.103:6003', blockchain);
+connectToPeer('ws://192.168.100.100:6003', blockchain);

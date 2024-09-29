@@ -8,6 +8,7 @@ import { Transaction } from './transaction';  // 从你的模块化文件导入
 import { BalanceManager } from './balanceManager';
 import { logWithTimestamp } from './utils';
 import { initP2PServer, connectToPeer, broadcast } from './6-p2p';  // 引入P2P功能
+import { MessageType } from './6-p2p';  // 导入 MessageType
 
 // 实例化区块链和余额管理器
 const blockchain = new Blockchain();
@@ -32,6 +33,14 @@ app.get('/latest-block', (req, res) => {
   const latestBlock = blockchain.getLatestBlock();
   res.json(latestBlock);  // 返回链上最新的区块
 });
+
+
+// 新增：获取整个区块链
+app.get('/blockchain', (req, res) => {
+  const chain = blockchain.loadBlockchainFromFile();  // 假设有一个方法可以获取整个区块链
+  res.json(chain);  // 返回整个区块链
+});
+
 
 // 矿工提交挖好的区块
 app.post('/submit-block', (req, res) => {
@@ -83,7 +92,8 @@ app.post('/submit-block', (req, res) => {
 
     // 广播新块到P2P网络
     console.log('⛏️ 广播新块到P2P网络:', newBlock.hash);
-    broadcast({ type: 'NEW_BLOCK', data: newBlock });
+  
+    broadcast({ type: MessageType.NEW_BLOCK, data: newBlock });
 
     return res.status(200).json({ message: 'Block accepted' });
   } catch (error) {
@@ -129,7 +139,8 @@ app.post('/transaction', (req: Request, res: Response) => {
 
   // 广播交易到P2P网络
   console.log(`📤 广播交易 ${from} -> ${to}, 金额: ${numericAmount}`);
-  broadcast({ type: 'NEW_TRANSACTION', data: { from, to, amount } });
+ 
+  broadcast({ type: MessageType.NEW_TRANSACTION, data: { from, to, amount } });
 
   return res.status(200).json({ message: 'Transaction created successfully' });
 });
@@ -143,4 +154,5 @@ app.listen(port, () => {
     .map(iface => iface?.address);
 
   console.log(`Blockchain node running on port ${port}`);
-  console.log('本机IP地址:', ipAddresses.filter(Boolean​⬤
+  console.log('本机IP地址:', ipAddresses.filter(Boolean).join(', ')); // 修正字符问题
+});

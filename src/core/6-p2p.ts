@@ -4,11 +4,13 @@ import { Blockchain } from './2-blockchain';  // 假设区块链文件路径
 const sockets: WebSocket[] = [];
 
 // 定义消息类型
-enum MessageType {
-    QUERY_LATEST = "QUERY_LATEST",
-    QUERY_ALL = "QUERY_ALL",
-    RESPONSE_BLOCKCHAIN = "RESPONSE_BLOCKCHAIN",
-    NEW_BLOCK = "NEW_BLOCK"
+
+export const enum MessageType {
+  QUERY_LATEST = "QUERY_LATEST",
+  QUERY_ALL = "QUERY_ALL",
+  RESPONSE_BLOCKCHAIN = "RESPONSE_BLOCKCHAIN",
+  NEW_BLOCK = "NEW_BLOCK",
+  NEW_TRANSACTION = "NEW_TRANSACTION"
 }
 
 // 定义消息接口
@@ -37,7 +39,13 @@ const initConnection = (ws: WebSocket, blockchain: Blockchain) => {
 
 // 处理消息
 const handleMessage = (ws: WebSocket, message: string, blockchain: Blockchain) => {
-    const receivedMessage: Message = JSON.parse(message);
+    let receivedMessage: Message;
+    try {
+        receivedMessage = JSON.parse(message);
+    } catch (error) {
+        console.error("无法解析的消息:", message);
+        return;
+    }
 
     switch (receivedMessage.type) {
         case MessageType.QUERY_LATEST:
@@ -107,16 +115,34 @@ const responseLatestMsg = (blockchain: Blockchain): Message => ({
 });
 
 // 发送消息
-const sendMessage = (ws: WebSocket, message: Message) => ws.send(JSON.stringify(message));
+const sendMessage = (ws: WebSocket, message: Message) => {
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(message));
+    } else {
+        console.warn("无法发送消息，WebSocket 未连接");
+    }
+};
 
 // 广播消息到所有节点
-export const broadcast = (message: Message) => sockets.forEach(ws => sendMessage(ws, message));
+
+export const broadcast = (message: Message) => {
+    sockets.forEach(ws => {
+        if (ws.readyState === WebSocket.OPEN) {
+            sendMessage(ws, message);
+        }
+    });
+};
+
+
 
 // 连接到新的节点
 export const connectToPeer = (newPeer: string, blockchain: Blockchain) => {
     const ws = new WebSocket(newPeer);
-    ws.on('open', () => initConnection(ws, blockchain));
+    ws.on('open', () => {
+        console.log(`成功连接到新节点: ${newPeer}`);
+        initConnection(ws, blockchain);
+    });
     ws.on('error', (error) => {
-        console.error('连接新节点时出错:', error);
+        console.error(`连接新节点 ${newPeer} 时出错:`, error);
     });
 };
