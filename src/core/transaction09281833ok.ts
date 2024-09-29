@@ -1,6 +1,6 @@
 import { keccak256, toUtf8Bytes } from 'ethers'; // 引入 v6 的 keccak256 和 toUtf8Bytes
 import { logWithTimestamp } from './utils';    // 引入日志输出函数
-import { Blockchain } from './blockchain';    // 引入区块链来检查账号信息
+import { Blockchain } from './2-blockchain';    // 引入区块链来检查账号信息
 import { BalanceManager } from './balanceManager';  // 引入 BalanceManager 检查余额
 
 

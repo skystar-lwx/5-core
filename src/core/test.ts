@@ -1,4 +1,4 @@
-import { Blockchain } from './blockchain';            // 引入 Blockchain 类
+import { Blockchain } from './2-blockchain';            // 引入 Blockchain 类
 import { Miner } from './miner';                      // 引入 Miner 类
 import { BalanceManager } from './balanceManager';    // 引入 BalanceManager 类
 import { logWithTimestamp } from './utils';    // 引入日志输出函数
